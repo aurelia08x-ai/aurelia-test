@@ -122,9 +122,14 @@
           <span class="inline-block w-2 h-2 rounded-full bg-[#FFF8D6]"></span>
           Aurelia store • official payment
         </span>
-        <span class="bg-[#FFF8D6] text-[#9A6F18] border border-[#F9D47E] px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
-          โหมดตัวอย่าง (Demo)
-        </span>
+        <button 
+          onclick="toggleAdminModal()"
+          class="pill-btn bg-[#FFF8D6] hover:bg-[#FDEFA8] text-[#8A6719] border border-dashed border-[#E8BE58] px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 shadow-2xs shrink-0"
+          title="จัดการร้าน (Demo)"
+        >
+          <i data-lucide="sparkles" class="w-3 h-3 text-[#D45D82]"></i>
+          <span>จัดการร้าน</span>
+        </button>
       </div>
       <div class="bg-[#FFD6E3] lace-top"></div>
 
@@ -145,48 +150,36 @@
         </div>
 
         <!-- โลโก้ร้านวงกลมซ้อนขอบล่างแบนเนอร์ สไตล์รูปโปรไฟล์ Carrd -->
-        <div class="px-5 sm:px-8 pb-4 relative flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 -mt-12 sm:-mt-14">
-          <div class="flex items-end gap-3.5">
-            <div class="relative shrink-0">
-              <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1.5 bg-white border-2 border-dashed border-[#F28BA8] shadow-md">
-                <img 
-                  id="store-logo"
-                  src="fb34b236edf320bafe87c263befb4853.jpg" 
-                  alt="โลโก้ร้าน Aurelia store" 
-                  class="w-full h-full object-cover rounded-full"
-                  onerror="this.src='https://placehold.co/400x400/FFF8D6/D45D82?text=Aurelia'"
-                />
-              </div>
-              <!-- ไอคอนโบว์ตกแต่งมุมโลโก้ -->
-              <span class="absolute -bottom-1 -right-1 bg-[#FFF8D6] border border-[#F4C96B] text-[#D45D82] w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-sm">
-                🎀
-              </span>
+        <div class="px-5 sm:px-8 pb-4 relative flex items-end gap-3.5 -mt-12 sm:-mt-14">
+          <div class="relative shrink-0">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1.5 bg-white border-2 border-dashed border-[#F28BA8] shadow-md">
+              <img 
+                id="store-logo"
+                src="fb34b236edf320bafe87c263befb4853.jpg" 
+                alt="โลโก้ร้าน Aurelia store" 
+                class="w-full h-full object-cover rounded-full"
+                onerror="this.src='https://placehold.co/400x400/FFF8D6/D45D82?text=Aurelia'"
+              />
             </div>
-
-            <div class="pb-1">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <h1 id="display-store-name" class="font-cute text-lg sm:text-2xl font-bold text-[#8C4A5E] tracking-wide">
-                  Aurelia store
-                </h1>
-                <span class="text-[11px] bg-[#FFF8D6] text-[#8A6719] border border-[#F9D47E] px-2 py-0.5 rounded-full font-medium">
-                  ช่องทางชำระเงิน
-                </span>
-              </div>
-              <p id="display-store-bio" class="text-xs sm:text-sm text-[#9E7682] mt-0.5">
-                ขอบคุณที่อุดหนุนนะคะ โอนแล้วอย่าลืมส่งสลิปน้า 🌼✨
-              </p>
-            </div>
+            <!-- ไอคอนโบว์ตกแต่งมุมโลโก้ -->
+            <span class="absolute -bottom-1 -right-1 bg-[#FFF8D6] border border-[#F4C96B] text-[#D45D82] w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-sm">
+              🎀
+            </span>
           </div>
 
-          <!-- ปุ่มสลับโหมดเจ้าของร้าน (ปรับขนาดเล็กๆ น่ารัก) -->
-          <button 
-            onclick="toggleAdminModal()"
-            class="self-end pill-btn bg-[#FFF8D6] hover:bg-[#FDEFA8] text-[#8A6719] border border-dashed border-[#E8BE58] px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1 shadow-2xs shrink-0"
-            title="จัดการร้าน (Demo)"
-          >
-            <i data-lucide="sparkles" class="w-3 h-3 text-[#D45D82]"></i>
-            <span>จัดการร้าน</span>
-          </button>
+          <div class="pb-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 id="display-store-name" class="font-cute text-lg sm:text-2xl font-bold text-[#8C4A5E] tracking-wide">
+                Aurelia store
+              </h1>
+              <span class="text-[11px] bg-[#FFF8D6] text-[#8A6719] border border-[#F9D47E] px-2 py-0.5 rounded-full font-medium">
+                ช่องทางชำระเงิน
+              </span>
+            </div>
+            <p id="display-store-bio" class="text-xs sm:text-sm text-[#9E7682] mt-0.5">
+              ขอบคุณที่อุดหนุนนะคะ โอนแล้วอย่าลืมส่งสลิปน้า 🌼✨
+            </p>
+          </div>
         </div>
       </div>
 
@@ -236,7 +229,7 @@
       <footer class="bg-[#FFF5F8] border-t border-dashed border-[#FFD6E3] px-4 py-3 text-center sm:flex sm:items-center sm:justify-between text-[11px] text-[#8C4A5E]">
         <div class="flex items-center justify-center gap-1.5">
           <span class="text-[#E5B23A]">♡</span>
-          <span>Thank you for supporting <b>Aurelia store ออรีเลีย</b></span>
+          <span>Thank you for supporting <b>Aurelia store</b></span>
         </div>
         <div class="mt-1 sm:mt-0 text-[#9A6F18]">
           <span>Template Preview • Demo Mode</span>
@@ -329,7 +322,7 @@
   <script>
     // ข้อมูลเริ่มต้น (Demo Data) — คุมโทนเฉพาะสีชมพูและสีเหลือง
     const defaultData = {
-      storeName: "Aurelia store ออรีเลีย",
+      storeName: "Aurelia store",
       storeBio: "ขอบคุณที่อุดหนุนนะคะ โอนแล้วอย่าลืมส่งสลิปน้า 🌼✨",
       bannerUrl: "5eaa95f4f3d935dc2c0b1664c96f0c77.jpg",
       logoUrl: "fb34b236edf320bafe87c263befb4853.jpg",
@@ -367,7 +360,7 @@
           type: "qr",
           badge: "พร้อมเพย์ QR • Demo",
           provider: "PromptPay QR Code",
-          accountName: "Aurelia store ออรีเลีย (Demo)",
+          accountName: "Aurelia store (Demo)",
           accountNumber: "สแกนหรือบันทึกรูปคิวอาร์โค้ด",
           rawNumber: "0800000000",
           accentColor: "#F28BA8",
