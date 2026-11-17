@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aurelia store ออรีเลีย — ช่องทางการโอนเงิน</title>
+  
+  <!-- โหลดฟอนต์ภาษาไทย "Prompt" และ "Mali" เพื่อความน่ารัก อ่านง่าย -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- โหลด Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- โหลดไอคอน Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+            cute: ['Mali', 'Prompt', 'sans-serif'],
+          },
+          colors: {
+            cream: '#FFFDF5',
+            pinkSoft: '#FFE8EF',
+            pinkMid: '#FFC2D4',
+            pinkDark: '#F28BA8',
+            pinkText: '#8C4A5E',
+            yellowSoft: '#FFF8D6',
+            yellowMid: '#FDE293',
+            yellowDark: '#E5B23A',
+            yellowText: '#8A6719',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* พื้นหลังลายทางทแยงสลับสีชมพูอ่อนและเหลืองครีม สไตล์ Carrd */
+    body {
+      background-color: #FFFDF5;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        #FFF3F7,
+        #FFF3F7 14px,
+        #FFFBEA 14px,
+        #FFFBEA 28px
+      );
+      color: #7A545E;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* กรอบเส้นประน่ารักคุมโทนชมพู-เหลือง */
+    .carrd-box {
+      background: #FFFFFF;
+      border: 2px solid #FFD6E3;
+      box-shadow: 0 8px 24px rgba(242, 139, 168, 0.14);
+      position: relative;
+    }
+    .carrd-inner-dash {
+      border: 1.5px dashed #F9D47E;
+    }
+
+    /* ลายหลังคากันสาดคาเฟ่ (Awning) สลับชมพู-เหลืองครีม */
+    .cafe-awning {
+      height: 18px;
+      background-color: #FFF9DF;
+      background-image: radial-gradient(circle at 12px 0, #FFD6E3 12px, transparent 13px);
+      background-size: 24px 18px;
+      background-repeat: repeat-x;
+    }
+
+    /* ลายลูกไม้ขอบบน */
+    .lace-top {
+      height: 12px;
+      background-image: radial-gradient(circle at 8px 12px, #FFFFFF 7px, transparent 8px);
+      background-size: 16px 12px;
+      background-repeat: repeat-x;
+    }
+
+    /* ปุ่มทรงแคปซูลเส้นประ */
+    .pill-btn {
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .pill-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* ซ่อน Scrollbar ของเมนูแนวนอน */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen py-4 px-3 sm:py-8 sm:px-6 flex flex-col items-center">
+
+  <!-- กล่องแจ้งเตือน (Toast Notification) แทนการใช้ alert() -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-4">
+    <div class="bg-[#8C4A5E] text-white px-5 py-3 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium border-2 border-pink-200">
+      <i data-lucide="sparkles" class="w-4 h-4 text-pink-200"></i>
+      <span id="toast-msg">คัดลอกเรียบร้อยแล้วค่ะ!</span>
+    </div>
+  </div>
+
+  <!-- คอนเทนเนอร์หลักสไตล์ Carrd -->
+  <main class="w-full max-w-2xl carrd-box rounded-[32px] overflow-hidden p-2 sm:p-3">
+    <!-- กรอบเส้นประชั้นใน -->
+    <div class="carrd-inner-dash rounded-[26px] overflow-hidden bg-[#FFFDF8]">
+
+      <!-- แถบตกแต่งด้านบนสุด (Ribbon Header) -->
+      <div class="bg-[#FFD6E3] pt-2 px-4 flex items-center justify-between text-xs text-[#8C4A5E] font-medium">
+        <span class="flex items-center gap-1">
+          <span class="inline-block w-2 h-2 rounded-full bg-[#FFF8D6]"></span>
+          Aurelia store • official payment
+        </span>
+        <span class="bg-[#FFF8D6] text-[#9A6F18] border border-[#F9D47E] px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
+          โหมดตัวอย่าง (Demo)
+        </span>
+      </div>
+      <div class="bg-[#FFD6E3] lace-top"></div>
+
+      <!-- ส่วนแบนเนอร์ร้าน ขนาดอัตราส่วน 1920x800px (aspect-[1920/800]) -->
+      <div class="relative w-full bg-pinkSoft">
+        <div class="w-full aspect-[1920/800] overflow-hidden relative group">
+          <img 
+            id="store-banner"
+            src="https://placehold.co/1920x800/FFE4EC/D45D82?text=Aurelia+store+Banner+(1920x800px)+%E2%99%A1+Demo" 
+            alt="แบนเนอร์ร้าน Aurelia store" 
+            class="w-full h-full object-cover"
+            onerror="this.src='https://placehold.co/1920x800/FFE4EC/D45D82?text=Aurelia+store+Banner'"
+          />
+          <!-- ป้ายบอกขนาดรูป Demo -->
+          <span class="absolute top-2.5 right-2.5 bg-[#FFF9DF]/95 backdrop-blur-sm text-[#8A6719] text-[10px] px-2.5 py-1 rounded-full border border-[#F9D47E] shadow-sm">
+            Banner 1920×800px (Demo)
+          </span>
+        </div>
+
+        <!-- โลโก้ร้านวงกลมซ้อนขอบล่างแบนเนอร์ สไตล์รูปโปรไฟล์ Carrd -->
+        <div class="px-5 sm:px-8 pb-4 relative flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 -mt-12 sm:-mt-14">
+          <div class="flex items-end gap-3.5">
+            <div class="relative shrink-0">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1.5 bg-white border-2 border-dashed border-[#F28BA8] shadow-md">
+                <img 
+                  id="store-logo"
+                  src="https://placehold.co/400x400/FFF8D6/D45D82?text=Aurelia%0Alogo%0A(Demo)" 
+                  alt="โลโก้ร้าน Aurelia store" 
+                  class="w-full h-full object-cover rounded-full"
+                  onerror="this.src='https://placehold.co/400x400/FFF8D6/D45D82?text=Aurelia'"
+                />
+              </div>
+              <!-- ไอคอนโบว์ตกแต่งมุมโลโก้ -->
+              <span class="absolute -bottom-1 -right-1 bg-[#FFF8D6] border border-[#F4C96B] text-[#D45D82] w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-sm">
+                🎀
+              </span>
+            </div>
+
+            <div class="pb-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <h1 id="display-store-name" class="font-cute text-lg sm:text-2xl font-bold text-[#8C4A5E] tracking-wide">
+                  Aurelia store ออรีเลีย
+                </h1>
+                <span class="text-[11px] bg-[#FFF8D6] text-[#8A6719] border border-[#F9D47E] px-2 py-0.5 rounded-full font-medium">
+                  ช่องทางชำระเงิน
+                </span>
+              </div>
+              <p id="display-store-bio" class="text-xs sm:text-sm text-[#9E7682] mt-0.5">
+                ขอบคุณที่อุดหนุนนะคะ โอนแล้วอย่าลืมส่งสลิปน้า 🌼✨
+              </p>
+            </div>
+          </div>
+
+          <!-- ปุ่มสลับโหมดเจ้าของร้าน (ปรับขนาดเล็กๆ น่ารัก) -->
+          <button 
+            onclick="toggleAdminModal()"
+            class="self-end pill-btn bg-[#FFF8D6] hover:bg-[#FDEFA8] text-[#8A6719] border border-dashed border-[#E8BE58] px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1 shadow-2xs shrink-0"
+            title="จัดการร้าน (Demo)"
+          >
+            <i data-lucide="sparkles" class="w-3 h-3 text-[#D45D82]"></i>
+            <span>จัดการร้าน</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ลายหลังคากันสาดคาเฟ่ -->
+      <div class="cafe-awning border-t border-pink-100"></div>
+
+      <!-- พื้นที่แสดงรายการช่องทางการโอนเงิน -->
+      <section class="p-4 sm:p-7 space-y-5">
+        
+        <!-- กล่องแจ้งเตือนข้อมูล Demo ชัดเจน -->
+        <div class="bg-[#FFF9E2] border border-dashed border-[#ECC465] rounded-2xl p-3.5 flex items-start gap-3 text-xs sm:text-sm text-[#8A6719]">
+          <span class="text-base leading-none mt-0.5">🌼</span>
+          <div>
+            <p class="font-semibold">ข้อมูลด้านล่างเป็นข้อมูลตัวอย่าง (Demo Data)</p>
+            <p class="text-[#9C7D34] text-xs mt-0.5">
+              ยังไม่ได้เชื่อมต่อฐานข้อมูลจริง คุณสามารถกดปุ่ม <b>"จัดการร้าน (Demo)"</b> ด้านบนเพื่อทดลองแก้ไขชื่อบัญชีหรือเลขบัญชีบนหน้าจอนี้ได้เลยค่ะ
+            </p>
+          </div>
+        </div>
+
+        <!-- รายการการ์ดช่องทางโอนเงิน (สร้างด้วย JS) -->
+        <div id="channels-container" class="space-y-4"></div>
+
+        <!-- เส้นคั่นลายโบว์ตรงกลางเหมือนในรูปตัวอย่าง -->
+        <div class="flex items-center justify-center gap-3 py-2 text-[#F28BA8]">
+          <span class="h-[2px] flex-1 border-b-2 border-dashed border-[#F9D47E]"></span>
+          <span class="text-sm">୨୧</span>
+          <span class="h-[2px] flex-1 border-b-2 border-dashed border-[#F9D47E]"></span>
+        </div>
+
+        <!-- กล่องหมายเหตุ / กติกาการโอนเงิน (Notes Box) -->
+        <div class="bg-[#FFFDF5] border-2 border-[#FDE293] rounded-2xl p-4 sm:p-5 relative">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-6 h-6 rounded-full bg-[#FFE8EF] text-[#D45D82] border border-[#FFC2D4] flex items-center justify-center text-xs font-bold">✦</span>
+            <h2 class="font-cute font-bold text-[#8A6719] text-sm sm:text-base">Notes • ข้อแนะนำก่อนโอนเงิน</h2>
+          </div>
+          <ul id="display-notes" class="text-xs sm:text-sm text-[#7A545E] space-y-1.5 pl-2">
+            <li>• กรุณาตรวจสอบ <b>ชื่อบัญชี</b> ให้ตรงก่อนกดยืนยันการโอนทุกครั้งนะคะ</li>
+            <li>• โอนเรียบร้อยแล้ว รบกวนแคปหน้าจอสลิปส่งให้ทางร้านในแชทได้เลยค่ะ</li>
+            <li>• หากพบปัญหาการโอน สามารถทักแจ้งแอดมินได้ตลอดเวลาเลยน้า 🌷</li>
+          </ul>
+        </div>
+
+      </section>
+
+      <!-- แถบ Footer ด้านล่างสไตล์ Music Player / Credit ของ Carrd -->
+      <footer class="bg-[#FFF5F8] border-t border-dashed border-[#FFD6E3] px-4 py-3 text-center sm:flex sm:items-center sm:justify-between text-[11px] text-[#8C4A5E]">
+        <div class="flex items-center justify-center gap-1.5">
+          <span class="text-[#E5B23A]">♡</span>
+          <span>Thank you for supporting <b>Aurelia store ออรีเลีย</b></span>
+        </div>
+        <div class="mt-1 sm:mt-0 text-[#9A6F18]">
+          <span>Template Preview • Demo Mode</span>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+
+  <!-- Modal สำหรับเจ้าของร้าน (Admin Demo Mode) -->
+  <div id="admin-modal" class="fixed inset-0 z-40 bg-[#6B4C56]/40 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[28px] border-2 border-[#FFD6E3] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <!-- หัวข้อ Modal -->
+      <div class="bg-[#FFE8EF] px-5 py-4 flex items-center justify-between border-b border-dashed border-[#F28BA8]">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🛠️</span>
+          <div>
+            <h3 class="font-cute font-bold text-[#8C4A5E] text-base">โหมดแก้ไขร้านค้า (Admin Demo)</h3>
+            <p class="text-[11px] text-[#9E7682]">ทดลองแก้ไขข้อมูลและอัปโหลดรูปจากมือถือ (รีเฟรชแล้วจะกลับเป็นค่าเริ่มต้น)</p>
+          </div>
+        </div>
+        <button onclick="toggleAdminModal()" class="w-8 h-8 rounded-full bg-white text-[#8C4A5E] flex items-center justify-center hover:bg-pink-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- เนื้อหาฟอร์มแก้ไข -->
+      <div class="p-5 overflow-y-auto space-y-4 text-sm">
+        <div class="bg-[#FFF9E2] border border-[#ECC465] text-[#8A6719] rounded-xl p-3 text-xs">
+          ⚠️ <b>หมายเหตุความปลอดภัย:</b> หน้าต่างนี้เป็นเพียงตัวอย่าง (Demo) รูปภาพที่อัปโหลดจากในเครื่องจะแสดงผลชั่วคราวบนหน้าจอนี้เท่านั้นค่ะ
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-[#8C4A5E] mb-1">ชื่อร้าน</label>
+          <input id="input-store-name" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-pink-200 focus:outline-none focus:border-[#F28BA8] bg-[#FFFDFB]" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-[#8C4A5E] mb-1">ข้อความต้อนรับใต้ชื่อร้าน</label>
+          <input id="input-store-bio" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-pink-200 focus:outline-none focus:border-[#F28BA8] bg-[#FFFDFB]" />
+        </div>
+
+        <!-- อัปโหลดรูปแบนเนอร์จากมือถือ หรือวางลิงก์ -->
+        <div class="p-3.5 rounded-2xl bg-[#FFF8FA] border border-dashed border-[#FFC2D4] space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <label class="block text-xs font-semibold text-[#8C4A5E]">รูปแบนเนอร์ (แนะนำ 1920×800px)</label>
+            <label class="cursor-pointer bg-[#FFF8D6] hover:bg-[#FDEFA8] text-[#8A6719] border border-[#E8BE58] px-3 py-1.5 rounded-full text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition">
+              <i data-lucide="image-plus" class="w-3.5 h-3.5 text-[#D45D82]"></i>
+              <span>เลือกรูปจากมือถือ</span>
+              <input id="file-banner-input" type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'banner')" />
+            </label>
+          </div>
+          <input id="input-banner-url" type="text" placeholder="หรือวางลิงก์รูปภาพ https://..." class="w-full px-3 py-2 text-xs rounded-xl border border-pink-200 focus:outline-none focus:border-[#F28BA8] bg-white" />
+        </div>
+
+        <!-- อัปโหลดรูปโลโก้จากมือถือ หรือวางลิงก์ -->
+        <div class="p-3.5 rounded-2xl bg-[#FFF8FA] border border-dashed border-[#FFC2D4] space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <label class="block text-xs font-semibold text-[#8C4A5E]">รูปโลโก้ร้าน (สี่เหลี่ยม 1:1)</label>
+            <label class="cursor-pointer bg-[#FFF8D6] hover:bg-[#FDEFA8] text-[#8A6719] border border-[#E8BE58] px-3 py-1.5 rounded-full text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition">
+              <i data-lucide="image-plus" class="w-3.5 h-3.5 text-[#D45D82]"></i>
+              <span>เลือกรูปจากมือถือ</span>
+              <input id="file-logo-input" type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'logo')" />
+            </label>
+          </div>
+          <input id="input-logo-url" type="text" placeholder="หรือวางลิงก์รูปภาพ https://..." class="w-full px-3 py-2 text-xs rounded-xl border border-pink-200 focus:outline-none focus:border-[#F28BA8] bg-white" />
+        </div>
+
+        <hr class="border-dashed border-pink-200" />
+        <p class="font-cute font-bold text-[#8C4A5E] text-xs">แก้ไขข้อมูลช่องทางการโอน (Demo)</p>
+
+        <div id="admin-channels-form" class="space-y-3"></div>
+      </div>
+
+      <!-- ปุ่มบันทึก / รีเซ็ต -->
+      <div class="p-4 bg-[#FFF8FA] border-t border-pink-100 flex items-center justify-between gap-2">
+        <button onclick="resetDemoData()" class="px-4 py-2.5 rounded-full text-xs font-medium text-[#9E7682] hover:bg-pink-100 transition">
+          รีเซ็ตค่าเริ่มต้น
+        </button>
+        <button onclick="saveDemoChanges()" class="px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold bg-[#F28BA8] hover:bg-[#e57797] text-white shadow-md transition">
+          บันทึกการแสดงผล (Demo)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Canvas ซ่อนสำหรับสร้างรูป QR Code ตัวอย่างให้ลูกค้ากดบันทึกได้จริง -->
+  <canvas id="qr-canvas" width="600" height="720" class="hidden"></canvas>
+
+  <script>
+    // ข้อมูลเริ่มต้น (Demo Data) — คุมโทนเฉพาะสีชมพูและสีเหลือง
+    const defaultData = {
+      storeName: "Aurelia store ออรีเลีย",
+      storeBio: "ขอบคุณที่อุดหนุนนะคะ โอนแล้วอย่าลืมส่งสลิปน้า 🌼✨",
+      bannerUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=1920&auto=format&fit=crop",
+      logoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop",
+      channels: [
+        {
+          id: "ch-1",
+          type: "bank",
+          badge: "ธนาคาร • Demo",
+          provider: "ธนาคารกสิกรไทย (KBank)",
+          accountName: "น.ส. ออรีเลีย ตัวอย่าง (Demo)",
+          accountNumber: "012-3-45678-9",
+          rawNumber: "0123456789",
+          accentColor: "#F28BA8",
+          iconTextColor: "#FFFFFF",
+          bgSoft: "#FFE8EF",
+          borderSoft: "#FFC2D4",
+          iconText: "K"
+        },
+        {
+          id: "ch-2",
+          type: "wallet",
+          badge: "วอเล็ท • Demo",
+          provider: "TrueMoney Wallet",
+          accountName: "ออรีเลีย สโตร์ (Demo)",
+          accountNumber: "080-000-0000",
+          rawNumber: "0800000000",
+          accentColor: "#F7D06B",
+          iconTextColor: "#7A5810",
+          bgSoft: "#FFF8D6",
+          borderSoft: "#F9D47E",
+          iconText: "W"
+        },
+        {
+          id: "ch-3",
+          type: "qr",
+          badge: "พร้อมเพย์ QR • Demo",
+          provider: "PromptPay QR Code",
+          accountName: "Aurelia store ออรีเลีย (Demo)",
+          accountNumber: "สแกนหรือบันทึกรูปคิวอาร์โค้ด",
+          rawNumber: "0800000000",
+          accentColor: "#F28BA8",
+          iconTextColor: "#FFFFFF",
+          bgSoft: "#FFF8D6",
+          borderSoft: "#F9D47E",
+          iconText: "QR"
+        }
+      ]
+    };
+
+    // โคลนข้อมูลสำหรับใช้งานในหน้าเว็บ
+    let appData = JSON.parse(JSON.stringify(defaultData));
+    let pendingBannerDataUrl = "";
+    let pendingLogoDataUrl = "";
+
+    // ฟังก์ชันอ่านไฟล์รูปภาพที่อัปโหลดจากโทรศัพท์/iPad
+    function handleImageUpload(event, target) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        if (target === "banner") {
+          pendingBannerDataUrl = dataUrl;
+          document.getElementById("input-banner-url").value = "📎 เลือกรูปแบนเนอร์จากเครื่องแล้ว (" + file.name + ")";
+          showToast("เลือกรูปแบนเนอร์เรียบร้อย กดบันทึกเพื่อดูผลนะคะ 🎀");
+        } else if (target === "logo") {
+          pendingLogoDataUrl = dataUrl;
+          document.getElementById("input-logo-url").value = "📎 เลือกรูปโลโก้จากเครื่องแล้ว (" + file.name + ")";
+          showToast("เลือกรูปโลโก้เรียบร้อย กดบันทึกเพื่อดูผลนะคะ ✨");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // แสดงแจ้งเตือนมุมล่าง (แทน alert)
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toast-msg");
+      toastMsg.textContent = message;
+      toast.classList.remove("opacity-0", "translate-y-4");
+      toast.classList.add("opacity-100", "translate-y-0");
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("opacity-100", "translate-y-0");
+        toast.classList.add("opacity-0", "translate-y-4");
+      }, 2400);
+    }
+
+    // ฟังก์ชันคัดลอกเลขบัญชี (รองรับมือถือและ iPad ในทุกสภาพแวดล้อม)
+    function copyText(text, label) {
+      try {
+        const tempInput = document.createElement("textarea");
+        tempInput.value = text;
+        tempInput.style.position = "fixed";
+        tempInput.style.opacity = "0";
+        document.body.appendChild(tempInput);
+        tempInput.focus();
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        showToast(`คัดลอก${label} (${text}) แล้วค่ะ ♡`);
+      } catch (err) {
+        showToast("ไม่สามารถคัดลอกอัตโนมัติได้ กรุณากดค้างที่ตัวเลขเพื่อคัดลอกค่ะ");
+      }
+    }
+
+    // สร้างและดาวน์โหลดรูป QR Code ตัวอย่าง (Demo)
+    function downloadDemoQR(accountName, rawNumber) {
+      const canvas = document.getElementById("qr-canvas");
+      const ctx = canvas.getContext("2d");
+
+      // พื้นหลังการ์ดสีชมพูครีม
+      ctx.fillStyle = "#FFF8FA";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // กรอบเส้นประด้านใน
+      ctx.strokeStyle = "#F28BA8";
+      ctx.lineWidth = 6;
+      ctx.setLineDash([14, 10]);
+      ctx.strokeRect(24, 24, canvas.width - 48, canvas.height - 48);
+      ctx.setLineDash([]);
+
+      // หัวข้อร้าน
+      ctx.fillStyle = "#8C4A5E";
+      ctx.font = "bold 36px Prompt, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(appData.storeName, canvas.width / 2, 95);
+
+      ctx.fillStyle = "#D45D82";
+      ctx.font = "22px Prompt, sans-serif";
+      ctx.fillText("PromptPay QR Code (ตัวอย่าง Demo)", canvas.width / 2, 135);
+
+      // กล่อง QR Code ตรงกลาง
+      const qrSize = 320;
+      const qrX = (canvas.width - qrSize) / 2;
+      const qrY = 175;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+
+      // วาดลวดลาย QR จำลอง (Demo Pattern)
+      ctx.fillStyle = "#4A353C";
+      const cell = 16;
+      const grid = qrSize / cell;
+      for (let r = 0; r < grid; r++) {
+        for (let c = 0; c < grid; c++) {
+          // มุม 3 ด้านของ QR
+          const isTopLeft = r < 5 && c < 5;
+          const isTopRight = r < 5 && c >= grid - 5;
+          const isBottomLeft = r >= grid - 5 && c < 5;
+          if (isTopLeft || isTopRight || isBottomLeft) {
+            if (r === 0 || r === 4 || c === 0 || c === 4 || 
+                r === grid - 1 || r === grid - 5 || c === grid - 1 || c === grid - 5 ||
+                (r >= 1 && r <= 3 && c >= 1 && c <= 3) ||
+                (r >= 1 && r <= 3 && c >= grid - 4 && c <= grid - 2) ||
+                (r >= grid - 4 && r <= grid - 2 && c >= 1 && c <= 3)) {
+              ctx.fillRect(qrX + c * cell, qrY + r * cell, cell - 2, cell - 2);
+            }
+          } else if ((r * 7 + c * 13) % 3 === 0) {
+            ctx.fillRect(qrX + c * cell, qrY + r * cell, cell - 2, cell - 2);
+          }
+        }
+      }
+
+      // ป้ายคาดกลาง QR ว่า DEMO
+      ctx.fillStyle = "#FFE8EF";
+      ctx.fillRect(canvas.width / 2 - 75, qrY + qrSize / 2 - 22, 150, 44);
+      ctx.fillStyle = "#D45D82";
+      ctx.font = "bold 22px Prompt, sans-serif";
+      ctx.fillText("DEMO QR", canvas.width / 2, qrY + qrSize / 2 + 8);
+
+      // ชื่อบัญชีด้านล่าง
+      ctx.fillStyle = "#6B4C56";
+      ctx.font = "bold 26px Prompt, sans-serif";
+      ctx.fillText(accountName, canvas.width / 2, 565);
+
+      ctx.fillStyle = "#9E7682";
+      ctx.font = "20px Prompt, sans-serif";
+      ctx.fillText(`พร้อมเพย์: ${rawNumber} (ข้อมูลตัวอย่าง)`, canvas.width / 2, 605);
+
+      // สั่งดาวน์โหลดไฟล์รูปภาพ
+      const link = document.createElement("a");
+      link.download = "aurelia-store-qr-demo.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+
+      showToast("บันทึกรูปคิวอาร์โค้ด (Demo) เรียบร้อยค่ะ 🎀");
+    }
+
+    // วาดการ์ดช่องทางโอนเงินทั้งหมด
+    function renderChannels() {
+      const container = document.getElementById("channels-container");
+      container.innerHTML = "";
+
+      appData.channels.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "rounded-[24px] p-4 sm:p-5 border-2 transition-all hover:shadow-md bg-white";
+        card.style.borderColor = item.borderSoft;
+
+        if (item.type === "qr") {
+          // การ์ดสำหรับ QR Code (จัดวางรูป QR ตรงกลางเด่นๆ คุมโทนชมพู-เหลือง)
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shadow-xs" style="background-color: ${item.accentColor}; color: ${item.iconTextColor}">
+                  ${item.iconText}
+                </div>
+                <div>
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FFF8D6] text-[#8A6719] border border-[#F9D47E]">
+                    ${item.badge}
+                  </span>
+                  <h3 class="font-cute font-bold text-[#8C4A5E] text-base mt-0.5">${item.provider}</h3>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-[#FFFDF5] border border-dashed border-[#F4C96B] rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center gap-3.5">
+              <!-- รูป QR Code ตัวอย่าง SVG ขนาดใหญ่ตรงกลางเด่นๆ -->
+              <div class="w-48 h-48 sm:w-56 sm:h-56 bg-white p-3.5 rounded-3xl border-2 border-[#FFC2D4] shadow-sm flex flex-col items-center justify-center shrink-0 relative">
+                <svg viewBox="0 0 100 100" class="w-full h-full text-[#7A545E]">
+                  <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
+                  <rect x="12" y="12" width="11" height="11" fill="currentColor"/>
+                  <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
+                  <rect x="77" y="12" width="11" height="11" fill="currentColor"/>
+                  <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
+                  <rect x="12" y="77" width="11" height="11" fill="currentColor"/>
+                  <rect x="40" y="10" width="8" height="8" fill="currentColor"/>
+                  <rect x="52" y="18" width="8" height="14" fill="currentColor"/>
+                  <rect x="38" y="38" width="24" height="24" rx="4" fill="#FFF8D6" stroke="#F4C96B" stroke-width="2"/>
+                  <text x="50" y="53" font-size="8" font-weight="bold" text-anchor="middle" fill="#D45D82">DEMO</text>
+                  <rect x="10" y="42" width="16" height="8" fill="currentColor"/>
+                  <rect x="74" y="42" width="16" height="12" fill="currentColor"/>
+                  <rect x="42" y="72" width="12" height="18" fill="currentColor"/>
+                  <rect x="65" y="70" width="24" height="8" fill="currentColor"/>
+                  <rect x="72" y="84" width="16" height="10" fill="currentColor"/>
+                </svg>
+              </div>
+
+              <div class="space-y-2 w-full max-w-sm flex flex-col items-center">
+                <div>
+                  <p class="text-xs text-[#9E7682]">ชื่อบัญชีรับเงิน</p>
+                  <p class="font-cute font-bold text-[#8C4A5E] text-base sm:text-lg">${item.accountName}</p>
+                </div>
+                <p class="text-xs text-[#9E7682]">กดปุ่มด้านล่างเพื่อบันทึกรูปคิวอาร์โค้ดลงเครื่อง แล้วนำไปสแกนในแอปธนาคารได้เลยค่ะ</p>
+                <div class="pt-1 w-full flex justify-center">
+                  <button 
+                    onclick="downloadDemoQR('${item.accountName}', '${item.rawNumber}')"
+                    class="pill-btn w-full sm:w-auto px-6 py-3 rounded-full bg-[#F28BA8] hover:bg-[#e47696] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>บันทึกรูปคิวอาร์โค้ด</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          // การ์ดสำหรับ ธนาคาร และ วอเล็ท (สลับโทนชมพู-เหลือง)
+          const isWallet = item.type === "wallet";
+          const btnClass = isWallet
+            ? "bg-[#FFF8D6] hover:bg-[#FDEFA8] text-[#8A6719] border-[#E8BE58]"
+            : "bg-[#FFE8EF] hover:bg-[#FFD6E3] text-[#8C4A5E] border-[#F28BA8]";
+          const iconColorClass = isWallet ? "text-[#C59322]" : "text-[#D45D82]";
+
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-base shadow-xs shrink-0" style="background-color: ${item.accentColor}; color: ${item.iconTextColor}">
+                  ${item.iconText}
+                </div>
+                <div>
+                  <span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style="background-color: ${item.bgSoft}; color: ${isWallet ? '#8A6719' : '#8C4A5E'}">
+                    ${item.badge}
+                  </span>
+                  <h3 class="font-cute font-bold text-[#7A545E] text-base sm:text-lg mt-0.5">${item.provider}</h3>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3.5 pt-3.5 border-t border-dashed border-[#F9D47E] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p class="text-xs text-[#9E7682]">ชื่อบัญชี: <span class="text-[#7A545E] font-medium">${item.accountName}</span></p>
+                <p class="font-cute text-xl sm:text-2xl font-bold text-[#8C4A5E] tracking-wider mt-0.5 select-all">
+                  ${item.accountNumber}
+                </p>
+              </div>
+
+              <button 
+                onclick="copyText('${item.rawNumber}', '${isWallet ? 'เบอร์วอเล็ท' : 'เลขบัญชี'}')"
+                class="pill-btn w-full sm:w-auto px-5 py-3 rounded-full border text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-xs shrink-0 ${btnClass}"
+              >
+                <i data-lucide="copy" class="w-4 h-4 ${iconColorClass}"></i>
+                <span>${isWallet ? 'คัดลอกเบอร์วอเล็ท' : 'คัดลอกเลขบัญชี'}</span>
+              </button>
+            </div>
+          `;
+        }
+
+        container.appendChild(card);
+      });
+
+      // อัปเดตไอคอน Lucide ที่เพิ่งสร้างใหม่
+      lucide.createIcons();
+    }
+
+    // เปิด/ปิดหน้าต่างจัดการร้าน (Admin Demo)
+    function toggleAdminModal() {
+      const modal = document.getElementById("admin-modal");
+      const isHidden = modal.classList.contains("hidden");
+      
+      if (isHidden) {
+        pendingBannerDataUrl = "";
+        pendingLogoDataUrl = "";
+        document.getElementById("file-banner-input").value = "";
+        document.getElementById("file-logo-input").value = "";
+
+        // เติมข้อมูลปัจจุบันลงในฟอร์ม
+        document.getElementById("input-store-name").value = appData.storeName;
+        document.getElementById("input-store-bio").value = appData.storeBio;
+        document.getElementById("input-banner-url").value = appData.bannerUrl.startsWith("data:") ? "" : appData.bannerUrl;
+        document.getElementById("input-logo-url").value = appData.logoUrl.startsWith("data:") ? "" : appData.logoUrl;
+
+        const formContainer = document.getElementById("admin-channels-form");
+        formContainer.innerHTML = appData.channels.map((ch, idx) => `
+          <div class="p-3 rounded-2xl bg-[#FFF8FA] border border-pink-100 space-y-2">
+            <p class="text-xs font-bold text-[#D45D82]">${ch.provider}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] text-[#9E7682]">ชื่อบัญชี</label>
+                <input id="ch-name-${idx}" type="text" value="${ch.accountName}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-pink-200 bg-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-[#9E7682]">เลขบัญชี / เบอร์ (แสดงผล)</label>
+                <input id="ch-num-${idx}" type="text" value="${ch.accountNumber}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-pink-200 bg-white" />
+              </div>
+            </div>
+          </div>
+        `).join("");
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        lucide.createIcons();
+      } else {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    // บันทึกการแก้ไขในโหมด Demo
+    function saveDemoChanges() {
+      appData.storeName = document.getElementById("input-store-name").value.trim() || defaultData.storeName;
+      appData.storeBio = document.getElementById("input-store-bio").value.trim() || defaultData.storeBio;
+      
+      if (pendingBannerDataUrl) {
+        appData.bannerUrl = pendingBannerDataUrl;
+      } else {
+        const newBanner = document.getElementById("input-banner-url").value.trim();
+        if (newBanner && !newBanner.startsWith("📎")) appData.bannerUrl = newBanner;
+      }
+
+      if (pendingLogoDataUrl) {
+        appData.logoUrl = pendingLogoDataUrl;
+      } else {
+        const newLogo = document.getElementById("input-logo-url").value.trim();
+        if (newLogo && !newLogo.startsWith("📎")) appData.logoUrl = newLogo;
+      }
+
+      appData.channels.forEach((ch, idx) => {
+        const nameInput = document.getElementById(`ch-name-${idx}`).value.trim();
+        const numInput = document.getElementById(`ch-num-${idx}`).value.trim();
+        if (nameInput) ch.accountName = nameInput;
+        if (numInput) {
+          ch.accountNumber = numInput;
+          // ดึงเฉพาะตัวเลขสำหรับปุ่มคัดลอก
+          const digitsOnly = numInput.replace(/[^0-9]/g, "");
+          if (digitsOnly) ch.rawNumber = digitsOnly;
+        }
+      });
+
+      updateStoreHeader();
+      renderChannels();
+      toggleAdminModal();
+      showToast("อัปเดตตัวอย่างหน้าเว็บเรียบร้อยค่ะ ✨");
+    }
+
+    // รีเซ็ตกลับเป็นค่าเริ่มต้น Demo
+    function resetDemoData() {
+      appData = JSON.parse(JSON.stringify(defaultData));
+      updateStoreHeader();
+      renderChannels();
+      toggleAdminModal();
+      showToast("รีเซ็ตข้อมูลกลับเป็นค่าเริ่มต้นแล้วค่ะ");
+    }
+
+    // อัปเดตส่วนหัวร้านและรูปภาพ
+    function updateStoreHeader() {
+      document.getElementById("display-store-name").textContent = appData.storeName;
+      document.getElementById("display-store-bio").textContent = appData.storeBio;
+      document.getElementById("store-banner").src = appData.bannerUrl;
+      document.getElementById("store-logo").src = appData.logoUrl;
+    }
+
+    // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จ
+    window.onload = function () {
+      updateStoreHeader();
+      renderChannels();
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
