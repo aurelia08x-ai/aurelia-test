@@ -149,10 +149,10 @@
           </span>
         </div>
 
-        <!-- โลโก้ร้านวงกลมจัดวางกึ่งกลางซ้อนขอบล่างแบนเนอร์ เพื่อความสมส่วนบนมือถือและทุกหน้าจอ -->
-        <div class="px-4 sm:px-8 pb-5 relative flex flex-col items-center text-center -mt-11 sm:-mt-14">
+        <!-- โลโก้ร้านวงกลมจัดวางกึ่งกลางซ้อนขอบล่างแบนเนอร์ ปรับขนาดให้พอดีกับหน้าจอมือถือและ iPad -->
+        <div class="px-4 sm:px-8 pb-5 relative flex flex-col items-center text-center -mt-8 sm:-mt-12">
           <div class="relative shrink-0">
-            <div class="w-22 h-22 sm:w-28 sm:h-28 rounded-full p-1.5 bg-white border-2 border-dashed border-[#F28BA8] shadow-md">
+            <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-full p-1 bg-white border-2 border-dashed border-[#F28BA8] shadow-md">
               <img 
                 id="store-logo"
                 src="fb34b236edf320bafe87c263befb4853.jpg" 
@@ -162,7 +162,7 @@
               />
             </div>
             <!-- ไอคอนโบว์ตกแต่งมุมโลโก้ -->
-            <span class="absolute -bottom-0.5 -right-0.5 bg-[#FFF8D6] border border-[#F4C96B] text-[#D45D82] w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[11px] sm:text-xs shadow-sm">
+            <span class="absolute -bottom-0.5 -right-0.5 bg-[#FFF8D6] border border-[#F4C96B] text-[#D45D82] w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs shadow-sm">
               🎀
             </span>
           </div>
@@ -278,13 +278,6 @@
           <input id="input-store-bio" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-pink-200 focus:outline-none focus:border-[#F28BA8] bg-[#FFFDFB]" />
         </div>
 
-        <!-- ตั้งค่าลิงก์ช่องทางการติดต่อ -->
-        <div class="p-3.5 rounded-2xl bg-[#FFF8FA] border border-dashed border-[#FFC2D4] space-y-2">
-          <label class="block text-xs font-semibold text-[#8C4A5E]">ลิงก์ช่องทางการติดต่อ (เว้นว่างไว้หากใช้เป็นตัวอย่าง)</label>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
-              <label class="block text-[11px] text-[#9E7682]">ลิงก์ Facebook</label>
-              <input id="input-fb-url" type="text" placeholder="https://facebook.com/..." class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-pink-200 bg-white" />
         <!-- ตั้งค่าลิงก์ช่องทางการติดต่อ (เพิ่ม/ลบ/แก้ไขได้) -->
         <div class="p-3.5 rounded-2xl bg-[#FFF8FA] border border-dashed border-[#FFC2D4] space-y-2.5">
           <div class="flex items-center justify-between gap-2">
@@ -321,6 +314,19 @@
             </label>
           </div>
           <input id="input-logo-url" type="text" placeholder="หรือวางลิงก์รูปภาพ https://..." class="w-full px-3 py-2 text-xs rounded-xl border border-pink-200 focus:outline-none focus:border-[#F28BA8] bg-white" />
+        </div>
+
+        <!-- อัปโหลดรูป QR Code จากมือถือ หรือวางลิงก์ -->
+        <div class="p-3.5 rounded-2xl bg-[#FFF8FA] border border-dashed border-[#FFC2D4] space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <label class="block text-xs font-semibold text-[#8C4A5E]">รูปคิวอาร์โค้ด (QR Code)</label>
+            <label class="cursor-pointer bg-[#FFF8D6] hover:bg-[#FDEFA8] text-[#8A6719] border border-[#E8BE58] px-3 py-1.5 rounded-full text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition">
+              <i data-lucide="qr-code" class="w-3.5 h-3.5 text-[#D45D82]"></i>
+              <span>เลือกรูป QR จากมือถือ</span>
+              <input id="file-qr-input" type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'qr')" />
+            </label>
+          </div>
+          <input id="input-qr-url" type="text" placeholder="หรือวางลิงก์รูป QR Code https://... (เว้นว่างเพื่อใช้ QR ตัวอย่าง)" class="w-full px-3 py-2 text-xs rounded-xl border border-pink-200 focus:outline-none focus:border-[#F28BA8] bg-white" />
         </div>
 
         <hr class="border-dashed border-pink-200" />
@@ -397,7 +403,8 @@
           iconTextColor: "#FFFFFF",
           bgSoft: "#FFF8D6",
           borderSoft: "#F9D47E",
-          iconText: "QR"
+          iconText: "QR",
+          qrImageUrl: ""
         }
       ]
     };
@@ -406,6 +413,7 @@
     let appData = JSON.parse(JSON.stringify(defaultData));
     let pendingBannerDataUrl = "";
     let pendingLogoDataUrl = "";
+    let pendingQrDataUrl = "";
     let tempContacts = [];
 
     // คลังไอคอน SVG สำหรับช่องทางการติดต่อ (คุมโทนสีเหลืองทั้งหมด)
@@ -441,6 +449,9 @@
         } else if (target === 'logo') {
           pendingLogoDataUrl = e.target.result;
           document.getElementById("input-logo-url").value = `📎 เลือกรูปแล้ว: ${file.name}`;
+        } else if (target === 'qr') {
+          pendingQrDataUrl = e.target.result;
+          document.getElementById("input-qr-url").value = `📎 เลือกรูป QR แล้ว: ${file.name}`;
         }
         showToast("เลือกรูปภาพสำเร็จ กดปุ่ม 'บันทึกการแสดงผล' ด้านล่างได้เลยค่ะ 🎀");
       };
@@ -470,17 +481,24 @@
       tempInput.style.opacity = "0";
       document.body.appendChild(tempInput);
       tempInput.select();
-      try {
-        document.execCommand("copy");
-        showToast(`คัดลอก${label} (${text}) เรียบร้อยค่ะ ✨`);
-      } catch (err) {
-        showToast("ไม่สามารถคัดลอกอัตโนมัติได้ กรุณากดค้างที่ตัวเลขเพื่อคัดลอกค่ะ");
-      }
+      document.execCommand("copy");
       document.body.removeChild(tempInput);
+      showToast(`คัดลอก${label}เรียบร้อยแล้วค่ะ ✨`);
     }
 
-    // สร้างและดาวน์โหลดรูป QR Code ตัวอย่าง (Demo)
+    // สร้างและดาวน์โหลดรูป QR Code (รองรับทั้งรูปที่แอดมินอัปโหลดเอง และรูปตัวอย่าง Demo)
     function downloadDemoQR(accountName, rawNumber) {
+      const qrChannel = appData.channels.find(c => c.type === "qr");
+      if (qrChannel && qrChannel.qrImageUrl) {
+        const link = document.createElement("a");
+        link.download = "aurelia-store-qr.png";
+        link.href = qrChannel.qrImageUrl;
+        link.target = "_blank";
+        link.click();
+        showToast("บันทึกรูปคิวอาร์โค้ดเรียบร้อยค่ะ 🎀");
+        return;
+      }
+
       const canvas = document.getElementById("qr-canvas");
       const ctx = canvas.getContext("2d");
 
@@ -572,6 +590,26 @@
         card.style.borderColor = item.borderSoft;
 
         if (item.type === "qr") {
+          const qrVisualHtml = item.qrImageUrl
+            ? `<img src="${item.qrImageUrl}" alt="QR Code รับเงิน" class="w-full h-full object-contain rounded-2xl" />`
+            : `<svg viewBox="0 0 100 100" class="w-full h-full text-[#7A545E]">
+                  <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
+                  <rect x="12" y="12" width="11" height="11" fill="currentColor"/>
+                  <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
+                  <rect x="77" y="12" width="11" height="11" fill="currentColor"/>
+                  <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
+                  <rect x="12" y="77" width="11" height="11" fill="currentColor"/>
+                  <rect x="40" y="10" width="8" height="8" fill="currentColor"/>
+                  <rect x="52" y="18" width="8" height="14" fill="currentColor"/>
+                  <rect x="38" y="38" width="24" height="24" rx="4" fill="#FFF8D6" stroke="#F4C96B" stroke-width="2"/>
+                  <text x="50" y="53" font-size="8" font-weight="bold" text-anchor="middle" fill="#D45D82">DEMO</text>
+                  <rect x="10" y="42" width="16" height="8" fill="currentColor"/>
+                  <rect x="74" y="42" width="16" height="12" fill="currentColor"/>
+                  <rect x="42" y="72" width="12" height="18" fill="currentColor"/>
+                  <rect x="65" y="70" width="24" height="8" fill="currentColor"/>
+                  <rect x="72" y="84" width="16" height="10" fill="currentColor"/>
+                </svg>`;
+
           // การ์ดสำหรับ QR Code (จัดวางรูป QR ตรงกลางเด่นๆ คุมโทนชมพู-เหลือง)
           card.innerHTML = `
             <div class="flex items-center justify-between gap-2 mb-3">
@@ -589,25 +627,9 @@
             </div>
 
             <div class="bg-[#FFFDF5] border border-dashed border-[#F4C96B] rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center gap-3.5">
-              <!-- รูป QR Code ตัวอย่าง SVG ขนาดใหญ่ตรงกลางเด่นๆ -->
-              <div class="w-48 h-48 sm:w-56 sm:h-56 bg-white p-3.5 rounded-3xl border-2 border-[#FFC2D4] shadow-sm flex flex-col items-center justify-center shrink-0 relative">
-                <svg viewBox="0 0 100 100" class="w-full h-full text-[#7A545E]">
-                  <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
-                  <rect x="12" y="12" width="11" height="11" fill="currentColor"/>
-                  <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
-                  <rect x="77" y="12" width="11" height="11" fill="currentColor"/>
-                  <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" stroke-width="5"/>
-                  <rect x="12" y="77" width="11" height="11" fill="currentColor"/>
-                  <rect x="40" y="10" width="8" height="8" fill="currentColor"/>
-                  <rect x="52" y="18" width="8" height="14" fill="currentColor"/>
-                  <rect x="38" y="38" width="24" height="24" rx="4" fill="#FFF8D6" stroke="#F4C96B" stroke-width="2"/>
-                  <text x="50" y="53" font-size="8" font-weight="bold" text-anchor="middle" fill="#D45D82">DEMO</text>
-                  <rect x="10" y="42" width="16" height="8" fill="currentColor"/>
-                  <rect x="74" y="42" width="16" height="12" fill="currentColor"/>
-                  <rect x="42" y="72" width="12" height="18" fill="currentColor"/>
-                  <rect x="65" y="70" width="24" height="8" fill="currentColor"/>
-                  <rect x="72" y="84" width="16" height="10" fill="currentColor"/>
-                </svg>
+              <!-- รูป QR Code ขนาดใหญ่ตรงกลางเด่นๆ -->
+              <div class="w-48 h-48 sm:w-56 sm:h-56 bg-white p-3.5 rounded-3xl border-2 border-[#FFC2D4] shadow-sm flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
+                ${qrVisualHtml}
               </div>
 
               <div class="space-y-2 w-full max-w-sm flex flex-col items-center">
@@ -749,8 +771,10 @@
       if (isHidden) {
         pendingBannerDataUrl = "";
         pendingLogoDataUrl = "";
+        pendingQrDataUrl = "";
         document.getElementById("file-banner-input").value = "";
         document.getElementById("file-logo-input").value = "";
+        document.getElementById("file-qr-input").value = "";
 
         // เติมข้อมูลปัจจุบันลงในฟอร์ม
         document.getElementById("input-store-name").value = appData.storeName;
@@ -760,10 +784,12 @@
 
         document.getElementById("input-banner-url").value = appData.bannerUrl.startsWith("data:") ? "" : appData.bannerUrl;
         document.getElementById("input-logo-url").value = appData.logoUrl.startsWith("data:") ? "" : appData.logoUrl;
+        const qrCh = appData.channels.find(c => c.type === "qr");
+        document.getElementById("input-qr-url").value = (qrCh && qrCh.qrImageUrl && !qrCh.qrImageUrl.startsWith("data:")) ? qrCh.qrImageUrl : "";
 
-        const formContainer = document.getElementById("admin-channels-form");
-        formContainer.innerHTML = appData.channels.map((ch, idx) => `
-          <div class="p-3 rounded-2xl bg-[#FFF8FA] border border-pink-100 space-y-2">
+        const channelsForm = document.getElementById("admin-channels-form");
+        channelsForm.innerHTML = appData.channels.map((ch, idx) => `
+          <div class="p-3 rounded-xl bg-[#FFF8FA] border border-pink-100 space-y-2">
             <p class="text-xs font-bold text-[#D45D82]">${ch.provider}</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
@@ -805,6 +831,18 @@
       } else {
         const newLogo = document.getElementById("input-logo-url").value.trim();
         if (newLogo && !newLogo.startsWith("📎")) appData.logoUrl = newLogo;
+      }
+
+      const qrChannel = appData.channels.find(c => c.type === "qr");
+      if (qrChannel) {
+        if (pendingQrDataUrl) {
+          qrChannel.qrImageUrl = pendingQrDataUrl;
+        } else {
+          const newQr = document.getElementById("input-qr-url").value.trim();
+          if (!newQr.startsWith("📎")) {
+            qrChannel.qrImageUrl = newQr;
+          }
+        }
       }
 
       appData.channels.forEach((ch, idx) => {
